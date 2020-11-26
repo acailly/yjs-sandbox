@@ -1,0 +1,25 @@
+{
+  "name": "yjs-sandbox",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "serve": "serve .",
+    "dist": "rollup -c"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "y-webrtc": "^10.1.6",
+    "yjs": "^13.4.5"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^16.0.0",
+    "@rollup/plugin-node-resolve": "^10.0.0",
+    "rollup": "^2.33.3",
+    "rollup-plugin-terser": "^7.0.2",
+    "serve": "^11.3.2"
+  }
+}

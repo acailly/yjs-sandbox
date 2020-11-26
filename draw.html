@@ -1,0 +1,88 @@
+<!-- Heavilly inspired by https://zserge.com/posts/awfice/, with some collab feature on it -->
+
+<script src="./dist/yjs.js"></script>
+
+<canvas id="canvas">
+  <script>
+    // Init Y.js
+    const ydoc = new Y.Doc();
+    const ylines = ydoc.getArray("lines");
+    const provider = new WebrtcProvider("zenika-demo-room", ydoc);
+
+    // reset style
+    document.body.style.margin = 0;
+
+    let mouseDownFlag = 0;
+
+    const canvasContext = canvas.getContext("2d");
+
+    // make canvas element fullscreen
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    // make lines a bit wider
+    canvasContext.lineWidth = 2;
+
+    // get X/Y position from mouse/touch
+    getMouseX = (e) => e.clientX || e.touches[0].clientX;
+    getMouseY = (e) => e.clientY || e.touches[0].clientY;
+
+    // draw a line
+    drawLine = (xSource, ySource, xTarget, yTarget) => {
+      canvasContext.beginPath();
+      canvasContext.moveTo(xSource, ySource);
+      canvasContext.lineTo(xTarget, yTarget);
+      canvasContext.stroke();
+    };
+
+    document.onmousedown = document.ontouchstart = (e) => {
+      mouseDownFlag = 1;
+      e.preventDefault();
+      mouseXSource = getMouseX(e);
+      mouseYSource = getMouseY(e);
+    };
+
+    document.onmousemove = document.ontouchmove = (e) => {
+      if (mouseDownFlag) {
+        mouseXTarget = getMouseX(e);
+        mouseYTarget = getMouseY(e);
+
+        ylines.push([
+          {
+            xSource: mouseXSource,
+            ySource: mouseYSource,
+            xTarget: mouseXTarget,
+            yTarget: mouseYTarget,
+          },
+        ]);
+
+        mouseXSource = mouseXTarget;
+        mouseYSource = mouseYTarget;
+      }
+    };
+
+    document.onmouseup = document.ontouchend = (e) => {
+      mouseDownFlag = 0;
+    };
+
+    // Listen changes from other persons
+
+    ylines.observe((event) => {
+      // Learn more about the delta format here: https://quilljs.com/docs/delta/
+      console.log("delta:", event.changes.delta);
+
+      for (const delta of event.changes.delta) {
+        if (delta.insert) {
+          for (const insert of delta.insert) {
+            drawLine(
+              insert.xSource,
+              insert.ySource,
+              insert.xTarget,
+              insert.yTarget
+            );
+          }
+        }
+      }
+    });
+  </script>
+</canvas>
