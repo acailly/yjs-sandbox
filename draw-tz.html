@@ -1,0 +1,98 @@
+<!-- Heavilly inspired by https://zserge.com/posts/awfice/ -->
+
+<script src="http://localhost:5000/dist/yjs.js"></script>
+
+<canvas id="canvas">
+  <script>
+    // reset style
+    document.body.style.margin = 0;
+
+    let mouseDownFlag = 0;
+
+    const canvasContext = canvas.getContext("2d");
+
+    // make canvas element fullscreen
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    // make lines a bit wider
+    canvasContext.lineWidth = 2;
+
+    // get X/Y position from mouse/touch
+    getMouseX = (e) => e.clientX || e.touches[0].clientX;
+    getMouseY = (e) => e.clientY || e.touches[0].clientY;
+
+    // define my color
+    function getRandomInt(max) {
+      return Math.floor(Math.random() * Math.floor(max));
+    }
+    const myRColor = getRandomInt(255);
+    const myGColor = getRandomInt(255);
+    const myBColor = getRandomInt(255);
+
+    const ydoc = new Y.Doc();
+    // clients connected to the same room-name share document updates
+    const provider = new WebrtcProvider("z-tz-room", ydoc);
+    const yarray = ydoc.getArray("Line Array");
+
+    // Observer on yarray
+    yarray.observe((event) => {
+      event.changes.delta
+        .filter((d) => d.insert)
+        .map((d) => d.insert[0])
+        .forEach((insert) =>
+          drawLine(
+            insert.mouseXSource,
+            insert.mouseYSource,
+            insert.mouseXTarget,
+            insert.mouseYTarget,
+            insert.myRColor,
+            insert.myGColor,
+            insert.myBColor
+          )
+        );
+    });
+
+    // draw a line
+    drawLine = (xSource, ySource, xTarget, yTarget, rColor, gColor, bColor) => {
+      canvasContext.strokeStyle = `rgb(${rColor}, ${gColor}, ${bColor})`;
+      canvasContext.beginPath();
+      canvasContext.moveTo(xSource, ySource);
+      canvasContext.lineTo(xTarget, yTarget);
+      canvasContext.stroke();
+    };
+
+    document.onmousedown = document.ontouchstart = (e) => {
+      mouseDownFlag = 1;
+      e.preventDefault();
+      mouseXSource = getMouseX(e);
+      mouseYSource = getMouseY(e);
+    };
+
+    document.onmousemove = document.ontouchmove = (e) => {
+      if (mouseDownFlag) {
+        mouseXTarget = getMouseX(e);
+        mouseYTarget = getMouseY(e);
+
+        yarray.push([
+          {
+            mouseXSource,
+            mouseYSource,
+            mouseXTarget,
+            mouseYTarget,
+            myRColor,
+            myGColor,
+            myBColor,
+          },
+        ]);
+
+        mouseXSource = mouseXTarget;
+        mouseYSource = mouseYTarget;
+      }
+    };
+
+    document.onmouseup = document.ontouchend = (e) => {
+      mouseDownFlag = 0;
+    };
+  </script></canvas
+>
