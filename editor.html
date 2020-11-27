@@ -2,6 +2,8 @@
 
 <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet" />
 
+<button id="open">Open file</button>
+<button id="save">Save file</button>
 <div id="editor" />
 
 <script src="./dist/yjs-quill.js"></script>
@@ -42,4 +44,38 @@
   window.addEventListener("blur", () => {
     quill.blur();
   });
+
+  // File API stuff
+  // see https://web.dev/file-system-access/
+
+  const openButton = document.querySelector("#open");
+  let fileHandle;
+  openButton.addEventListener("click", async () => {
+    [fileHandle] = await window.showOpenFilePicker();
+    const file = await fileHandle.getFile();
+    const contents = await file.text();
+    quill.setText(contents);
+  });
+
+  const saveButton = document.querySelector("#save");
+  saveButton.addEventListener("click", async () => {
+    if (!fileHandle) {
+      fileHandle = await getNewFileHandle();
+    }
+    await writeFile(fileHandle, quill.getText());
+  });
+
+  async function getNewFileHandle() {
+    const handle = await window.showSaveFilePicker();
+    return handle;
+  }
+
+  async function writeFile(fileHandle, contents) {
+    // Create a FileSystemWritableFileStream to write to.
+    const writable = await fileHandle.createWritable();
+    // Write the contents of the file to the stream.
+    await writable.write(contents);
+    // Close the file and write the contents to disk.
+    await writable.close();
+  }
 </script>
