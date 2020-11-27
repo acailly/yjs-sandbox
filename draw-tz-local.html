@@ -1,6 +1,6 @@
 <!-- Heavilly inspired by https://zserge.com/posts/awfice/ -->
 
-<script src="https://acailly.github.io/yjs-sandbox/dist/yjs.js"></script>
+<script src="http://localhost:5000/dist/yjs.js"></script>
 
 <canvas id="canvas">
   <script>
@@ -32,9 +32,7 @@
 
     const ydoc = new Y.Doc();
     // clients connected to the same room-name share document updates
-    const provider = new WebrtcProvider("z-tz-room", ydoc, {
-      signaling: ["wss://y-webrtc-signaling-eu.herokuapp.com"],
-    });
+    const provider = new WebrtcProvider("z-tz-room", ydoc);
     const yarray = ydoc.getArray("Line Array");
 
     // Observer on yarray
