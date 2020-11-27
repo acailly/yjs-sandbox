@@ -1,0 +1,105 @@
+<!-- Heavilly inspired by https://zserge.com/posts/awfice/, with some collab feature on it -->
+
+<!-- This page can be embed with itty.bitty.site -->
+<!-- https://itty.bitty.site/#/data:text/html;charset=utf-8;bxze64,XQAAAAItCwAAAAAAAAAeCEITR21Pvpvx0nGjjujpOEP06LCzoZaJFEUGc/oGxJLfnxOjVgelIATDRdtjlu5jXp7Do0e/HhmWv39MTchaRUWCyL5iaIL/9u0H6ECuANVlOhgBZt7A2CAPm4Rndx4OnwXq+tlEWB8saejgpsmf4965MYq4uszHxrqPg2UmHFiA7S47fGIN8Wni13sahjDngUXrttNmj+cz6bvVnFvskBgAahpWvypo6SF0yizD7p9+migr8bEdTKMqEXyjgMUSmb3hvuo6XZgpT98R2pE/LAkPESI3eqvave2MN21HQ+k46fQUSWBLu10EO2ZPmHuby8hGjw8Fna76O1HleJWyRDQb1iS2rqEBD54zeTS2GW+XSjpOVQGQztbaf4TaARugD6RLsNr9Yw7uSsLywzwi8Sg/SQsL19p0fERgSKAx2+wbBzVPj8C+8K3gjstuuI3o4+TxeE8L3NNvrwIYqIRs0RUQWN3VNvLA5+c/U17Sq9ZnaBm8QbWV8QFb88OEiJNOpC4xWpBvdTJIqYgHTMJHWJo1a24n3s7+GE2Cu460Ftt2YToYtwFxqZojdrfDnyoquNjmBmbawyd7aUgoiSy4uCxsVpB9MaxmqG2PMvI7sT6Nou3Y/6hrOLNDtYGYR3R5L5vSI2mq/PZnE9kYUheL/VrzlhH2o/hx6h0aXZf8TDdY/pdZcPVN1fqv2My9k3vdZ+i2jR3DWsrtgG94Z7nxWD+z8qafpjj3nq4DyKaUdU12PCmsvLN5EbEHG/q7BNlMPEuBGWykB/ZfxtMzU/Gaf81LYVwE1WZDJiocJfASky4LKlrf+JMahAgynUdsJ7eiuJ37kuUKoAfkeFZa2S+8wDlgbQPShfQap0B+smLbKLjwG7S7luYM50F3TCFQVXo3Kn1QFIiTcLr/OlVoI/N6/rL015syhjBjA5sJJ0R++VvpOHaQn9TKvkPFmMsTpAK5vBWwSXupAGlnVukVbzmLE3SbysHeZMewbA4rNpHU0TSbGfPq4z3U39FzXce4gEGpRmBJxVrQQr9FTLPz4Tq7/Gt7IUTZfYrbZc/qaZIyQZohbxZ1oaJop3kuFiAYFcHmcuTRFPDHdq74D/xx5GMn9RdDuL1TfEoAsbxMUyyCiAtl5Mb4T7twLihqWnHHi2U0JwzdRcFlZtR0vUr9OwOgx5yXSUZKSSBrEV4HuF9IHiPEhF2li5T+rehW/nnzRjBXlcCS5pMWpSnxob9M/1uAh/fG2lTmH4qTm33CEoUHutHSyDE6xXzobUNKjexjwOSL9wnlsZb7//k4xZs= -->
+
+<script src="https://acailly.github.io/yjs-sandbox/dist/yjs.js"></script>
+
+<canvas id="canvas">
+  <script>
+    // Init Y.js
+    const ydoc = new Y.Doc();
+    const ylines = ydoc.getArray("lines");
+    const provider = new WebrtcProvider("acailly-draw-demo-room", ydoc, {
+      signaling: ["wss://y-webrtc-signaling-eu.herokuapp.com"],
+    });
+
+    // reset style
+    document.body.style.margin = 0;
+
+    let mouseDownFlag = 0;
+
+    const canvasContext = canvas.getContext("2d");
+
+    // make canvas element fullscreen
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+
+    // make lines a bit wider
+    canvasContext.lineWidth = 2;
+
+    // get X/Y position from mouse/touch
+    getMouseX = (e) => {
+      if (e.clientX) {
+        return e.clientX;
+      } else {
+        return e.touches[0].clientX;
+      }
+    };
+    getMouseY = (e) => {
+      if (e.clientY) {
+        return e.clientY;
+      } else {
+        return e.touches[0].clientY;
+      }
+    };
+
+    // draw a line
+    drawLine = (xSource, ySource, xTarget, yTarget) => {
+      canvasContext.beginPath();
+      canvasContext.moveTo(xSource, ySource);
+      canvasContext.lineTo(xTarget, yTarget);
+      canvasContext.stroke();
+    };
+
+    document.onmousedown = document.ontouchstart = (e) => {
+      mouseDownFlag = 1;
+      e.preventDefault();
+      mouseXSource = getMouseX(e);
+      mouseYSource = getMouseY(e);
+    };
+
+    document.onmousemove = document.ontouchmove = (e) => {
+      if (mouseDownFlag) {
+        mouseXTarget = getMouseX(e);
+        mouseYTarget = getMouseY(e);
+
+        ylines.push([
+          {
+            xSource: mouseXSource,
+            ySource: mouseYSource,
+            xTarget: mouseXTarget,
+            yTarget: mouseYTarget,
+          },
+        ]);
+
+        mouseXSource = mouseXTarget;
+        mouseYSource = mouseYTarget;
+      }
+    };
+
+    document.onmouseup = document.ontouchend = (e) => {
+      mouseDownFlag = 0;
+    };
+
+    // Listen changes from other persons
+
+    ylines.observe((event) => {
+      // Learn more about the delta format here: https://quilljs.com/docs/delta/
+      console.log("delta:", event.changes.delta);
+
+      for (const delta of event.changes.delta) {
+        if (delta.insert) {
+          for (const insert of delta.insert) {
+            drawLine(
+              insert.xSource,
+              insert.ySource,
+              insert.xTarget,
+              insert.yTarget
+            );
+          }
+        }
+      }
+    });
+  </script>
+</canvas>
